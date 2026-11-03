@@ -273,21 +273,12 @@ Policy Evaluation Value Function:
 
 
 ## Result
-
-```text
 The Policy Iteration algorithm successfully found the optimal state-value function and the optimal policy for the FrozenLake-v1 environment.
 
-
-
-
-```
 ---
 
 ## Inference
-```text
 Policy Iteration converged to the optimal policy after a few iterations by repeatedly evaluating and improving the policy.
 
-
-```
 ---
 
