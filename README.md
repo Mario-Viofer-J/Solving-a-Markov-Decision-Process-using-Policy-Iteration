@@ -126,45 +126,157 @@ If the improved policy is the same as the old policy, the policy is considered s
 
 ```python
 
+
+import gymnasium as gym
+import numpy as np
+```
+```
+# -------------------------------------------------
+# Create FrozenLake Environment
+# -------------------------------------------------
+env = gym.make("FrozenLake-v1", is_slippery=True)
+env = env.unwrapped
+```
+```
 # -------------------------------------------------
 # Policy Evaluation
 # -------------------------------------------------
+def policy_evaluation(env, policy, gamma=0.95, theta=1e-6):
+    n_states = env.observation_space.n
+    V = np.zeros(n_states)
 
+    while True:
+        delta = 0
 
+        for s in range(n_states):
+            v = 0
 
+            action = policy[s]
+
+            for prob, next_state, reward, done in env.P[s][action]:
+                v += prob * (reward + gamma * V[next_state])
+
+            delta = max(delta, abs(V[s] - v))
+            V[s] = v
+
+        if delta < theta:
+            break
+
+    return V
+```
+```
 # -------------------------------------------------
 # Policy Improvement
 # -------------------------------------------------
+def policy_improvement(env, V, gamma=0.95):
+    n_states = env.observation_space.n
+    n_actions = env.action_space.n
 
+    policy = np.zeros(n_states, dtype=int)
+
+    for s in range(n_states):
+        action_values = np.zeros(n_actions)
+
+        for a in range(n_actions):
+            for prob, next_state, reward, done in env.P[s][a]:
+                action_values[a] += prob * (
+                    reward + gamma * V[next_state]
+                )
+
+        policy[s] = np.argmax(action_values)
+
+    return policy
+```
+```
 #-------------------------------------------------
 # Policy Iteration
 # -------------------------------------------------
 
+def policy_iteration(env, gamma=0.95, theta=1e-6):
+    n_states = env.observation_space.n
 
+    # Random initial policy
+    policy = np.random.randint(env.action_space.n, size=n_states)
 
+    iterations = 0
+
+    while True:
+        iterations += 1
+
+        # Policy Evaluation
+        V = policy_evaluation(env, policy, gamma, theta)
+
+        # Policy Improvement
+        new_policy = policy_improvement(env, V, gamma)
+
+        # Check for convergence
+        if np.array_equal(policy, new_policy):
+            break
+
+        policy = new_policy
+
+    return policy, V, iterations
+
+   optimal_policy, optimal_value, iterations = policy_iteration(env)
+
+# Action Symbols
+action_names = {
+    0: "←",
+    1: "↓",
+    2: "→",
+    3: "↑"
+}
+
+print("Total policy iterations:", iterations)
+
+print("\nOptimal State-Value Function:\n")
+print(np.round(optimal_value.reshape(4, 4), 3))
+
+print("\nOptimal Policy:\n")
+
+policy_grid = np.array(
+    [action_names[a] for a in optimal_policy]
+).reshape(4, 4)
+
+print(policy_grid)
 
 ```
 
 ## Output
 
-```text
-
-Total policy iterations: 
+```
+Total policy iterations: 7
+Name:                  Mario Viofer J
+Register Number:       212223100032
 
 Optimal State-Value Function:
-
+[[0.542  0.4988 0.4707 0.4569]
+ [0.5585 0.     0.3583 0.    ]
+ [0.5918 0.6431 0.6152 0.    ]
+ [0.     0.7417 0.8628 0.    ]]
 
 Optimal Policy:
+[['←' '↑' '↑' '↑']
+ ['←' '←' '←' '←']
+ ['↑' '↓' '←' '←']
+ ['←' '→' '↓' '←']]
 
 ```
+<img width="361" height="270" alt="image" src="https://github.com/user-attachments/assets/0d5ef858-70c3-4e79-9c57-a5ac5decbc87" />
+
+Policy Evaluation Value Function:
+
+<img width="438" height="230" alt="image" src="https://github.com/user-attachments/assets/90b1ea90-d5ee-4dca-8cf0-47d770b36724" />
 
 
 
----
+
 
 ## Result
 
 ```text
+The Policy Iteration algorithm successfully found the optimal state-value function and the optimal policy for the FrozenLake-v1 environment.
+
 
 
 
@@ -173,6 +285,7 @@ Optimal Policy:
 
 ## Inference
 ```text
+Policy Iteration converged to the optimal policy after a few iterations by repeatedly evaluating and improving the policy.
 
 
 ```
